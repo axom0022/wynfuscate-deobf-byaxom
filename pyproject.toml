@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wynfuscate-deobfuscator"
+dynamic = ["version"]
+description = "Static deobfuscator for wYnFuscate-protected back to readable Lua."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+gate = ["lupa"]
+
+[project.scripts]
+wynfuscate = "wynfuscate.cli:main"
+
+[tool.setuptools]
+packages = ["wynfuscate"]
+
+[tool.setuptools.dynamic]
+version = { attr = "wynfuscate.version" }
