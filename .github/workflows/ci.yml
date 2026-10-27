@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: install gate dependencies
+        run: pip install lupa
+
+      - name: source style audit
+        run: python dev/stylecheck.py
+
+      - name: unit tests (register live-range splitting)
+        run: python dev/test_split.py
+
+      - name: full regression gate (both samples, end to end)
+        run: python dev/gate.py
