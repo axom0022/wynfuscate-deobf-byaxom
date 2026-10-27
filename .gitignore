@@ -4,6 +4,7 @@ __pycache__/
 .eggs/
 .venv/
 venv/
+.cache/
 build/
 dist/
 
@@ -16,10 +17,4 @@ Thumbs.db
 uploads/
 research/
 output/
-
-dev/*
-!dev/gate.py
-!dev/difftest.py
-!dev/test_split.py
-!dev/stylecheck.py
-!dev/scopecheck.py
+dev_archive.tar.gz
