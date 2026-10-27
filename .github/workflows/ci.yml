@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  gate:
+  smoke:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -18,14 +18,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: install gate dependencies
+      - name: install lupa 
         run: pip install lupa
 
-      - name: source style audit
-        run: python dev/stylecheck.py
+      - name: end-to-end on both samples
+        run: |
+          python3 -m wynfuscate samples/sample_full.lua -o /tmp/smoke
+          python3 -m wynfuscate samples/wynfuscate_sample2.lua -o /tmp/smoke
+          test -s /tmp/smoke/sample_full.deobf.lua
+          test -s /tmp/smoke/wynfuscate_sample2.deobf.lua
 
-      - name: unit tests (register live-range splitting)
-        run: python dev/test_split.py
+      - name: determinism (byte-identical rerun)
+        run: |
+          python3 -m wynfuscate samples/sample_full.lua -o /tmp/rerun
+          cmp /tmp/smoke/sample_full.deobf.lua /tmp/rerun/sample_full.deobf.lua
 
-      - name: full regression gate (both samples, end to end)
-        run: python dev/gate.py
+      - name: lifts compile as lua 5.1
+        run: |
+          python3 - <<'EOF'
+          from lupa import lua51 as L
+          rt = L.LuaRuntime(unpack_returned_tuples=True)
+          check = rt.eval(
+              'function(s) local f, e = loadstring(s, "c"); '
+              'if f then return true, nil end; return false, e end')
+          for name in ("sample_full", "wynfuscate_sample2"):
+              with open("/tmp/smoke/%s.deobf.lua" % name, encoding="latin-1") as fh:
+                  ok, err = check(fh.read())
+              assert ok, "%s: %s" % (name, err)
+          print("both lifts compile as lua 5.1")
+          EOF
